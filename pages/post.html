@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About Me</title>
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <link rel="icon" type="image/png" href="../assets/images/logo.jpg">
+</head>
+<body>
+    <!-- Standardized Navigation Menu -->
+    <nav>
+        <div class="nav-container">
+            <a href="../index.html" class="nav-logo">
+                <img src="../assets/images/logo.jpg" alt="Logo">
+            </a>
+            
+            <!-- Main Navigation Links -->
+            <div class="nav-links">
+                <a href="../pages/board.html" class="nav-link">💬 Board</a>
+                <a href="../pages/aboutme.html" class="nav-link">👀 About Me</a>
+                <a href="../pages/post.html" class="nav-link">💬 Post!</a>
+            </div>
+            
+            <!-- Authentication Section -->
+            <div id="auth-section" class="auth-buttons">
+                <button id="login-btn" class="nav-link auth-btn">Log Masuk</button>
+                <button id="signup-btn" class="nav-link auth-btn">Daftar</button>
+            </div>
+            
+            <div id="user-section" class="user-info" style="display: none;">
+                <span id="user-email" class="user-email"></span>
+                <button id="logout-btn" class="nav-link logout-btn">Log Keluar</button>
+            </div>
+        </div>
+    </nav>
+
+    <header>
+        <div class="header-content">
+            <h1>💬 Present a Thought. 💬</h1>
+            <p>Uncreative Motherfucker</p>
+
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main>
+        <div class="comment-page">
+            <!-- Authentication Required Notice -->
+            <div id="auth-notice" class="auth-notice" style="display: none;">
+                <div class="notice-content">
+                    <h3>🔐 Log Masuk Diperlukan</h3>
+                    <p>Sila log masuk atau daftar akaun untuk menghantar komen.</p>
+                    <div class="notice-buttons">
+                        <button onclick="openLoginModal()" class="btn btn-primary">Log Masuk</button>
+                        <button onclick="openSignupModal()" class="btn btn-secondary">Daftar Akaun</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Comment Form -->
+            <form id="comment-form" class="comment-form">
+                <h2 style="text-align: center; margin-bottom: 30px; color: white;">
+                    Post a Thought
+                </h2>
+                
+                <div class="form-group">
+                    <label for="nama">Nama Anda</label>
+                    <input 
+                        type="text" 
+                        id="nama" 
+                        name="nama" 
+                        placeholder="Masukkan nama anda..."
+                        required
+                    >
+                </div>
+                
+                <div class="form-group">
+                    <label for="komen">Details and shii</label>
+                    <textarea 
+                        id="komen" 
+                        name="komen" 
+                        placeholder="bleh"
+                        required
+                    ></textarea>
+                </div>
+                
+                <button type="submit" class="submit-btn">
+                    Post !
+                </button>
+            </form>
+
+            <!-- Comments Display -->
+            <div class="comments-section">
+                <h2 style="text-align: center; margin: 40px 0 30px 0; color: white;">
+                    💭 Komen Terdahulu
+                </h2>
+                <div id="comments-list" class="comments-list">
+                    <div class="loading" style="text-align: center; color: white; padding: 20px;">
+                        Memuatkan komen...
+                    </div>
+                </div>
+            </div>
+
+            <!-- Back to Home -->
+            <div class="back-home">
+                <a href="../index.html" class="back-btn">
+                    <span>← Kembali ke Halaman Utama</span>
+                </a>
+            </div>
+        </div>
+    </main>
+
+    <!-- Login Modal -->
+    <div id="login-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>🔑 Log Masuk</h3>
+                <span class="close" onclick="closeLoginModal()">&times;</span>
+            </div>
+            <form id="login-form">
+                <div class="form-group">
+                    <label for="login-email">Email</label>
+                    <input type="email" id="login-email" required>
+                </div>
+                <div class="form-group">
+                    <label for="login-password">Kata Laluan</label>
+                    <input type="password" id="login-password" required>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">Log Masuk</button>
+            </form>
+            <p style="text-align: center; margin-top: 15px; color: white;">
+                Belum ada akaun? <a href="#" onclick="closeLoginModal(); openSignupModal();" style="color: #4CAF50;">Daftar di sini</a>
+            </p>
+        </div>
+    </div>
+
+    <!-- Signup Modal -->
+    <div id="signup-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>📝 Daftar Akaun</h3>
+                <span class="close" onclick="closeSignupModal()">&times;</span>
+            </div>
+            <form id="signup-form">
+                <div class="form-group">
+                    <label for="signup-name">Nama</label>
+                    <input type="text" id="signup-name" required>
+                </div>
+                <div class="form-group">
+                    <label for="signup-email">Email</label>
+                    <input type="email" id="signup-email" required>
+                </div>
+                <div class="form-group">
+                    <label for="signup-password">Kata Laluan</label>
+                    <input type="password" id="signup-password" required minlength="6">
+                </div>
+                <button type="submit" class="btn btn-secondary" style="width: 100%;">Daftar Akaun</button>
+            </form>
+            <p style="text-align: center; margin-top: 15px; color: white;">
+                Sudah ada akaun? <a href="#" onclick="closeSignupModal(); openLoginModal();" style="color: #FF6B6B;">Log masuk di sini</a>
+            </p>
+        </div>
+    </div>
+
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-content">
+            <p>&copy; A Product of Toolwoo</p>
+            <a href="https://instagram.com/toolwooo" class="footer-link" target="_blank">
+                Instagram!
+            </a>
+        </div>
+    </footer>
+
+    <!-- Load Supabase Client -->
+    <script type="module" src="assets/js/supabase.js"></script>
+    
+    <!-- Global Authentication JavaScript -->
+    <script type="module">
+        // Wait for Supabase to load
+        window.addEventListener('load', async () => {
+            await new Promise(resolve => {
+                if (window.authFunctions) {
+                    resolve();
+                } else {
+                    const checkAuth = setInterval(() => {
+                        if (window.authFunctions) {
+                            clearInterval(checkAuth);
+                            resolve();
+                        }
+                    }, 100);
+                }
+            });
+
+            initializeAuth();
+        });
+
+        async function initializeAuth() {
+            // Check authentication status
+            await window.authFunctions.checkAuth();
+            
+            // Set up event listeners
+            setupEventListeners();
+        }
+
+        function setupEventListeners() {
+            // Login form submission
+            document.getElementById('login-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const email = document.getElementById('login-email').value;
+                const password = document.getElementById('login-password').value;
+
+                const result = await window.authFunctions.signIn(email, password);
+                
+                if (result.success) {
+                    closeLoginModal();
+                    document.getElementById('login-form').reset();
+                }
+            });
+
+            // Signup form submission
+            document.getElementById('signup-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const name = document.getElementById('signup-name').value;
+                const email = document.getElementById('signup-email').value;
+                const password = document.getElementById('signup-password').value;
+
+                const result = await window.authFunctions.signUp(email, password, name);
+                
+                if (result.success) {
+                    closeSignupModal();
+                    document.getElementById('signup-form').reset();
+                }
+            });
+
+            // Auth button events
+            document.getElementById('login-btn').addEventListener('click', openLoginModal);
+            document.getElementById('signup-btn').addEventListener('click', openSignupModal);
+            document.getElementById('logout-btn').addEventListener('click', async () => {
+                await window.authFunctions.signOut();
+            });
+        }
+
+        // Modal functions
+        window.openLoginModal = () => {
+            document.getElementById('login-modal').style.display = 'flex';
+        };
+
+        window.closeLoginModal = () => {
+            document.getElementById('login-modal').style.display = 'none';
+        };
+
+        window.openSignupModal = () => {
+            document.getElementById('signup-modal').style.display = 'flex';
+        };
+
+        window.closeSignupModal = () => {
+            document.getElementById('signup-modal').style.display = 'none';
+        };
+    </script>
+</body>
+</html>
