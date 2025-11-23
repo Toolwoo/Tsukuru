@@ -1,191 +1,164 @@
 <!DOCTYPE html>
-<html lang="ms">
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tsukuru | Post</title>
-    <link rel="stylesheet" href="../assets/css/style.css">
-    <link rel="icon" type="image/png" href="../assets/images/logo.jpg">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tsukuru | Post a Thought</title>
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <link rel="icon" type="image/png" href="../assets/images/logo.jpg">
 </head>
 <body>
-    <!-- Standardized Navigation Menu -->
-    <nav>
-        <div class="nav-container">
-            <a href="../index.html" class="nav-logo">
-                <img src="../assets/images/logo.jpg" alt="Logo">
-            </a>
-            
-            <!-- Main Navigation Links -->
-            <div class="nav-links">
-                <a href="../pages/board.html" class="nav-link">💬 Board</a>
-                <a href="../pages/aboutme.html" class="nav-link">👀 About Me</a>
-                <a href="../pages/post.html" class="nav-link">💬 Post!</a>
-            </div>
-            
-            <!-- Authentication Section -->
-            <div id="auth-section" class="auth-buttons">
-                <button id="login-btn" class="nav-link auth-btn">Log Masuk</button>
-                <button id="signup-btn" class="nav-link auth-btn">Daftar</button>
-            </div>
-            
-            <div id="user-section" class="user-info" style="display: none;">
-                <span id="user-email" class="user-email"></span>
-                <button id="logout-btn" class="nav-link logout-btn">Log Keluar</button>
-            </div>
+  <!-- Navigation Menu -->
+  <nav>
+    <div class="nav-container">
+      <a href="../index.html" class="nav-logo">
+        <img src="../assets/images/logo.jpg" alt="Logo">
+      </a>
+      <div class="nav-links">
+        <a href="../pages/board.html" class="nav-link">💬 Board</a>
+        <a href="../pages/aboutme.html" class="nav-link">👀 About Me</a>
+        <a href="../pages/post.html" class="nav-link active">💬 Post!</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Header -->
+  <header>
+    <div class="header-content">
+      <h1>💬 Share Your Thought 💬</h1>
+      <p>Express your ideas freely!</p>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main>
+    <div class="comment-page">
+      <!-- Comment Form -->
+      <form id="thoughtForm" class="comment-form">
+        <h2 style="text-align: center; margin-bottom: 30px; color: white;">
+          Post a Thought
+        </h2>
+
+        <div class="form-group">
+          <label for="thoughtText">Title</label>
+          <input type="text" id="thoughtText" name="thoughtText" placeholder="Write the title" required>
         </div>
-    </nav>
 
-    <header>
-        <div class="header-content">
-            <h1>💬 Present a Thought. 💬</h1>
-            <p>Uncreative Motherfucker</p>
-
+        <div class="form-group">
+          <label for="thoughtCategory">Category</label>
+          <select id="thoughtCategory">
+            <option value="deep-dive">Deep Dive</option>
+            <option value="short-thoughts">Short Thoughts</option>
+            <option value="">Other</option>
+          </select>
         </div>
-    </header>
 
-    <!-- Main Content -->
-    <main>
-        <div class="comment-page">
-            <!-- Authentication Required Notice -->
-            <div id="auth-notice" class="auth-notice" style="display: none;">
-                <div class="notice-content">
-                    <h3>🔐 Log Masuk Diperlukan</h3>
-                    <p>Sila log masuk atau daftar akaun untuk menghantar komen.</p>
-                    <div class="notice-buttons">
-                        <button onclick="openLoginModal()" class="btn btn-primary">Log Masuk</button>
-                        <button onclick="openSignupModal()" class="btn btn-secondary">Daftar Akaun</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Comment Form -->
-            <form id="comment-form" class="comment-form">
-                <h2 style="text-align: center; margin-bottom: 30px; color: white;">
-                    Post a Thought
-                </h2>
-                
-                <div class="form-group">
-                    <label for="nama">Title : </label>
-                    <input 
-                        type="text" 
-                        id="nama" 
-                        name="nama" 
-                        placeholder="Write the Title"
-                        required
-                    >
-                </div>
-
-                <div class="form-filter">
-                    <label>Filter: 
-                        <select id="filter">
-                        <option value="deep-dive">Deep Dive</option>
-                        <option value="short-thoughts">Short Thoughts</option>
-                        </select>
-                    </label>
-                </div>
-
-                <div class="form-group">
-                    <label for="komen">Write an idea..</label>
-                    <textarea 
-                        id="komen" 
-                        name="komen" 
-                        placeholder="Write an idea"
-                        required
-                    ></textarea>
-                </div>
-                
-                <button type="submit" class="submit-btn">
-                    Post !
-                </button>
-            </form>
-
-            <!-- Comments Display -->
-            <div class="comments-section">
-                <h2 style="text-align: center; margin: 40px 0 30px 0; color: white;">
-                    💭 Komen Terdahulu
-                </h2>
-                <div id="comments-list" class="comments-list">
-                    <div class="loading" style="text-align: center; color: white; padding: 20px;">
-                        Memuatkan komen...
-                    </div>
-                </div>
-            </div>
-
-            <!-- Back to Home -->
-            <div class="back-home">
-                <a href="../index.html" class="back-btn">
-                    <span>← Kembali ke Halaman Utama</span>
-                </a>
-            </div>
+        <div class="form-group">
+          <label for="thoughtContent">Your Idea</label>
+          <textarea id="thoughtContent" name="thoughtContent" placeholder="Write your idea..." required></textarea>
         </div>
-    </main>
-      <!-- Supabase CDN -->
-<script src="https://unpkg.com/@supabase/supabase-js@2/dist/supabase.min.js"></script>
-<!-- Supabase Library -->
-  <script src="https://unpkg.com/@supabase/supabase-js@2/dist/supabase.min.js"></script>
 
-  <!-- Thoughts Script -->
+        <button type="submit" class="submit-btn">Post!</button>
+      </form>
+
+      <!-- Display Thoughts -->
+      <div class="comments-section">
+        <h2 style="text-align: center; margin: 40px 0 30px 0; color: white;">
+          💭 Previous Thoughts
+        </h2>
+        <div id="thoughts" class="comments-list">
+          <div class="loading" style="text-align: center; color: white; padding: 20px;">
+            Loading thoughts...
+          </div>
+        </div>
+      </div>
+
+      <!-- Back to Home -->
+      <div class="back-home">
+        <a href="../index.html" class="back-btn">
+          ← Back to Home Page
+        </a>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <div class="footer-content">
+      <p>&copy; Faiz Danial bin Mohd Lotfi -- 1 Alfa</p>
+    </div>
+  </footer>
+
+  <!-- Supabase ESM Script -->
   <script type="module">
-    // Initialize Supabase
+    import { createClient } from "https://cdn.skypack.dev/@supabase/supabase-js";
+
     const SUPABASE_URL = "https://hjpjtufobzttssidfexf.supabase.co";
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhqcGp0dWZvYnp0dHNzaWRmZXhmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM4MTY0OTQsImV4cCI6MjA3OTM5MjQ5NH0.xAAAGortVAhOIeKoMyWNvJDrc0kr0FjfTzn3V99wFS0"; // replace with your anon key
-    const supabase = Supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    const form = document.getElementById("thoughtForm");
-    const textEl = document.getElementById("thoughtText");
-    const catEl = document.getElementById("thoughtCategory");
-    const thoughtsDiv = document.getElementById("thoughts");
+    // Run code only after DOM is fully loaded
+    document.addEventListener("DOMContentLoaded", () => {
+      const form = document.getElementById("thoughtForm");
+      const titleEl = document.getElementById("thoughtText");
+      const categoryEl = document.getElementById("thoughtCategory");
+      const contentEl = document.getElementById("thoughtContent");
+      const thoughtsDiv = document.getElementById("thoughts");
 
-    // Submit a new thought
-    form.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const text = textEl.value.trim();
-      const category = catEl.value.trim() || null;
+      // Submit a new thought
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const text = titleEl.value.trim();
+        const category = categoryEl.value.trim() || null;
+        const content = contentEl.value.trim();
 
-      if (!text) return alert("Please write a thought!");
+        if (!text || !content) return alert("Please fill in all fields!");
 
-      const { data, error } = await supabase
-        .from("thoughts")
-        .insert([{ text, category }]);
+        const { data, error } = await supabase
+          .from("thoughts")
+          .insert([{ text, category, content }]);
 
-      if (error) {
-        console.error(error);
-        alert("Failed to submit. Check console.");
-      } else {
-        textEl.value = "";
-        catEl.value = "";
-        loadThoughts();
+        if (error) {
+          console.error(error);
+          alert("Failed to submit. Check console.");
+        } else {
+          titleEl.value = "";
+          categoryEl.value = "";
+          contentEl.value = "";
+          loadThoughts();
+        }
+      });
+
+      // Load all thoughts
+      async function loadThoughts() {
+        const { data, error } = await supabase
+          .from("thoughts")
+          .select("*")
+          .order("created_at", { ascending: false });
+
+        if (error) {
+          console.error(error);
+          thoughtsDiv.innerHTML = "<p style='color:red'>Failed to load thoughts.</p>";
+          return;
+        }
+
+        if (!data || data.length === 0) {
+          thoughtsDiv.innerHTML = '<div style="text-align: center; color: white; padding: 20px;">No thoughts yet. Be the first!</div>';
+          return;
+        }
+
+        thoughtsDiv.innerHTML = data.map(t => `
+          <div class="comment-item" style="padding:8px; border-bottom:1px solid #eee;">
+            <strong>${t.category || "Uncategorized"}</strong>: ${t.text}<br>
+            <small>${t.content}</small><br>
+            <div class="comment-date">${new Date(t.created_at).toLocaleString()}</div>
+          </div>
+        `).join('');
       }
+
+      // Initial load
+      loadThoughts();
     });
-
-    // Load all thoughts
-    async function loadThoughts() {
-      const { data, error } = await supabase
-        .from("thoughts")
-        .select("*")
-        .order("created_at", { ascending: false });
-
-      if (error) {
-        console.error(error);
-        thoughtsDiv.innerHTML = "<p style='color:red'>Failed to load thoughts.</p>";
-        return;
-      }
-
-      if (!data || data.length === 0) {
-        thoughtsDiv.innerHTML = '<div style="text-align: center; color: white; padding: 20px;">No thoughts yet. Be the first!</div>';
-        return;
-      }
-
-      thoughtsDiv.innerHTML = data.map(t => `
-        <div class="comment-item" style="padding:8px; border-bottom:1px solid #eee;">
-          <strong>${t.category || "Uncategorized"}</strong>: ${t.text}
-          <div class="comment-date">${new Date(t.created_at).toLocaleString()}</div>
-        </div>
-      `).join('');
-    }
-
-    // Initial load
-    loadThoughts();
   </script>
+
 </body>
 </html>
