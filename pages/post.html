@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>About Me</title>
+    <title>Tsukuru | Post</title>
     <link rel="stylesheet" href="../assets/css/style.css">
     <link rel="icon" type="image/png" href="../assets/images/logo.jpg">
 </head>
@@ -65,22 +65,31 @@
                 </h2>
                 
                 <div class="form-group">
-                    <label for="nama">Nama Anda</label>
+                    <label for="nama">Title : </label>
                     <input 
                         type="text" 
                         id="nama" 
                         name="nama" 
-                        placeholder="Masukkan nama anda..."
+                        placeholder="Write the Title"
                         required
                     >
                 </div>
-                
+
+                <div class="form-filter">
+                    <label>Filter: 
+                        <select id="filter">
+                        <option value="deep-dive">Deep Dive</option>
+                        <option value="short-thoughts">Short Thoughts</option>
+                        </select>
+                    </label>
+                </div>
+
                 <div class="form-group">
-                    <label for="komen">Details and shii</label>
+                    <label for="komen">Write an idea..</label>
                     <textarea 
                         id="komen" 
                         name="komen" 
-                        placeholder="bleh"
+                        placeholder="Write an idea"
                         required
                     ></textarea>
                 </div>
@@ -110,157 +119,73 @@
             </div>
         </div>
     </main>
+      <!-- Supabase CDN -->
+<script src="https://unpkg.com/@supabase/supabase-js@2/dist/supabase.min.js"></script>
+<!-- Supabase Library -->
+  <script src="https://unpkg.com/@supabase/supabase-js@2/dist/supabase.min.js"></script>
 
-    <!-- Login Modal -->
-    <div id="login-modal" class="modal" style="display: none;">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>🔑 Log Masuk</h3>
-                <span class="close" onclick="closeLoginModal()">&times;</span>
-            </div>
-            <form id="login-form">
-                <div class="form-group">
-                    <label for="login-email">Email</label>
-                    <input type="email" id="login-email" required>
-                </div>
-                <div class="form-group">
-                    <label for="login-password">Kata Laluan</label>
-                    <input type="password" id="login-password" required>
-                </div>
-                <button type="submit" class="btn btn-primary" style="width: 100%;">Log Masuk</button>
-            </form>
-            <p style="text-align: center; margin-top: 15px; color: white;">
-                Belum ada akaun? <a href="#" onclick="closeLoginModal(); openSignupModal();" style="color: #4CAF50;">Daftar di sini</a>
-            </p>
+  <!-- Thoughts Script -->
+  <script type="module">
+    // Initialize Supabase
+    const SUPABASE_URL = "https://hjpjtufobzttssidfexf.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhqcGp0dWZvYnp0dHNzaWRmZXhmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM4MTY0OTQsImV4cCI6MjA3OTM5MjQ5NH0.xAAAGortVAhOIeKoMyWNvJDrc0kr0FjfTzn3V99wFS0"; // replace with your anon key
+    const supabase = Supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    const form = document.getElementById("thoughtForm");
+    const textEl = document.getElementById("thoughtText");
+    const catEl = document.getElementById("thoughtCategory");
+    const thoughtsDiv = document.getElementById("thoughts");
+
+    // Submit a new thought
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const text = textEl.value.trim();
+      const category = catEl.value.trim() || null;
+
+      if (!text) return alert("Please write a thought!");
+
+      const { data, error } = await supabase
+        .from("thoughts")
+        .insert([{ text, category }]);
+
+      if (error) {
+        console.error(error);
+        alert("Failed to submit. Check console.");
+      } else {
+        textEl.value = "";
+        catEl.value = "";
+        loadThoughts();
+      }
+    });
+
+    // Load all thoughts
+    async function loadThoughts() {
+      const { data, error } = await supabase
+        .from("thoughts")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        console.error(error);
+        thoughtsDiv.innerHTML = "<p style='color:red'>Failed to load thoughts.</p>";
+        return;
+      }
+
+      if (!data || data.length === 0) {
+        thoughtsDiv.innerHTML = '<div style="text-align: center; color: white; padding: 20px;">No thoughts yet. Be the first!</div>';
+        return;
+      }
+
+      thoughtsDiv.innerHTML = data.map(t => `
+        <div class="comment-item" style="padding:8px; border-bottom:1px solid #eee;">
+          <strong>${t.category || "Uncategorized"}</strong>: ${t.text}
+          <div class="comment-date">${new Date(t.created_at).toLocaleString()}</div>
         </div>
-    </div>
+      `).join('');
+    }
 
-    <!-- Signup Modal -->
-    <div id="signup-modal" class="modal" style="display: none;">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>📝 Daftar Akaun</h3>
-                <span class="close" onclick="closeSignupModal()">&times;</span>
-            </div>
-            <form id="signup-form">
-                <div class="form-group">
-                    <label for="signup-name">Nama</label>
-                    <input type="text" id="signup-name" required>
-                </div>
-                <div class="form-group">
-                    <label for="signup-email">Email</label>
-                    <input type="email" id="signup-email" required>
-                </div>
-                <div class="form-group">
-                    <label for="signup-password">Kata Laluan</label>
-                    <input type="password" id="signup-password" required minlength="6">
-                </div>
-                <button type="submit" class="btn btn-secondary" style="width: 100%;">Daftar Akaun</button>
-            </form>
-            <p style="text-align: center; margin-top: 15px; color: white;">
-                Sudah ada akaun? <a href="#" onclick="closeSignupModal(); openLoginModal();" style="color: #FF6B6B;">Log masuk di sini</a>
-            </p>
-        </div>
-    </div>
-
-
-    <!-- Footer -->
-    <footer>
-        <div class="footer-content">
-            <p>&copy; A Product of Toolwoo</p>
-            <a href="https://instagram.com/toolwooo" class="footer-link" target="_blank">
-                Instagram!
-            </a>
-        </div>
-    </footer>
-
-    <!-- Load Supabase Client -->
-    <script type="module" src="assets/js/supabase.js"></script>
-    
-    <!-- Global Authentication JavaScript -->
-    <script type="module">
-        // Wait for Supabase to load
-        window.addEventListener('load', async () => {
-            await new Promise(resolve => {
-                if (window.authFunctions) {
-                    resolve();
-                } else {
-                    const checkAuth = setInterval(() => {
-                        if (window.authFunctions) {
-                            clearInterval(checkAuth);
-                            resolve();
-                        }
-                    }, 100);
-                }
-            });
-
-            initializeAuth();
-        });
-
-        async function initializeAuth() {
-            // Check authentication status
-            await window.authFunctions.checkAuth();
-            
-            // Set up event listeners
-            setupEventListeners();
-        }
-
-        function setupEventListeners() {
-            // Login form submission
-            document.getElementById('login-form').addEventListener('submit', async (e) => {
-                e.preventDefault();
-                
-                const email = document.getElementById('login-email').value;
-                const password = document.getElementById('login-password').value;
-
-                const result = await window.authFunctions.signIn(email, password);
-                
-                if (result.success) {
-                    closeLoginModal();
-                    document.getElementById('login-form').reset();
-                }
-            });
-
-            // Signup form submission
-            document.getElementById('signup-form').addEventListener('submit', async (e) => {
-                e.preventDefault();
-                
-                const name = document.getElementById('signup-name').value;
-                const email = document.getElementById('signup-email').value;
-                const password = document.getElementById('signup-password').value;
-
-                const result = await window.authFunctions.signUp(email, password, name);
-                
-                if (result.success) {
-                    closeSignupModal();
-                    document.getElementById('signup-form').reset();
-                }
-            });
-
-            // Auth button events
-            document.getElementById('login-btn').addEventListener('click', openLoginModal);
-            document.getElementById('signup-btn').addEventListener('click', openSignupModal);
-            document.getElementById('logout-btn').addEventListener('click', async () => {
-                await window.authFunctions.signOut();
-            });
-        }
-
-        // Modal functions
-        window.openLoginModal = () => {
-            document.getElementById('login-modal').style.display = 'flex';
-        };
-
-        window.closeLoginModal = () => {
-            document.getElementById('login-modal').style.display = 'none';
-        };
-
-        window.openSignupModal = () => {
-            document.getElementById('signup-modal').style.display = 'flex';
-        };
-
-        window.closeSignupModal = () => {
-            document.getElementById('signup-modal').style.display = 'none';
-        };
-    </script>
+    // Initial load
+    loadThoughts();
+  </script>
 </body>
 </html>
