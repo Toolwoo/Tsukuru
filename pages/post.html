@@ -16,12 +16,22 @@
       </a>
       <div class="nav-links">
         <a href="../pages/board.html" class="nav-link">💬 Board</a>
-        <a href="../pages/aboutme.html" class="nav-link">👀 About Me</a>
         <a href="../pages/post.html" class="nav-link active">💬 Post!</a>
+      </div>
+      
+      <!-- Authentication Section -->
+      <div id="auth-section" class="auth-buttons">
+        <button id="login-btn" class="nav-link auth-btn">Log Masuk</button>
+        <button id="signup-btn" class="nav-link auth-btn">Daftar</button>
+      </div>
+      
+      <div id="user-section" class="user-info" style="display: none;">
+        <span id="user-email" class="user-email"></span>
+        <button id="logout-btn" class="nav-link logout-btn">Log Keluar</button>
       </div>
     </div>
   </nav>
-
+  
   <!-- Header -->
   <header>
     <div class="header-content">
@@ -29,47 +39,49 @@
       <p>Express your ideas freely!</p>
     </div>
   </header>
-
+  
   <!-- Main Content -->
   <main>
     <div class="comment-page">
-      <!-- Comment Form -->
-      <form id="thoughtForm" class="comment-form">
-        <h2 style="text-align: center; margin-bottom: 30px; color: white;">
-          Post a Thought
-        </h2>
+      
+      <!-- Protected Content Warning (shown when not logged in) -->
+      <div id="protected-warning" class="protected-warning" style="display: none;">
+        <h3>🔒 Limited access 🔒</h3>
+        <p>Only admins can post content!</p>
+        <p>Please log in to post content..</p>
+        <button onclick="document.getElementById('login-btn').click()" class="btn btn-primary">
+          Login
+        </button>
+      </div>
 
-        <div class="form-group">
-          <label for="thoughtText">Title</label>
-          <input type="text" id="thoughtText" name="thoughtText" placeholder="Write the title" required>
-        </div>
-
-        <div class="form-group">
-          <label for="thoughtCategory">Category</label>
-          <select id="thoughtCategory">
-            <option value="deep-dive">Deep Dive</option>
-            <option value="short-thoughts">Short Thoughts</option>
-            <option value="">Other</option>
-          </select>
-        </div>
-
-        <div class="form-group">
-          <label for="thoughtContent">Your Idea</label>
-          <textarea id="thoughtContent" name="thoughtContent" placeholder="Write your idea..." required></textarea>
-        </div>
-
-        <button type="submit" class="submit-btn">Post!</button>
-      </form>
-
-      <!-- Display Thoughts -->
-      <div class="comments-section">
-        <h2 style="text-align: center; margin: 40px 0 30px 0; color: white;">
-          💭 Previous Thoughts
-        </h2>
-        <div id="thoughts" class="comments-list">
-          <div class="loading" style="text-align: center; color: white; padding: 20px;">
-            Loading thoughts...
+      <!-- Comment Form (shown when logged in as admin) -->
+      <div id="post-form-container" style="display: none;">
+        <form id="thoughtForm" class="comment-form">
+          <h2 style="text-align: center; margin-bottom: 30px; color: white;">
+            Post a Thought
+          </h2>
+          <img class="img" src="../assets/images/job.jpg">
+          <div class="form-group">
+            <label for="thoughtText">Title</label>
+            <input type="text" id="thoughtText" name="thoughtText" placeholder="Write the title" required>
           </div>
+          
+          <label class="thought-label" for="thoughtCategory">Category</label>
+          <div class="filter-container">
+            <select id="thoughtCategory">
+              <option value="deep-dive">Deep Dive</option>
+              <option value="short-thoughts">Short Thoughts</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="thoughtContent">Your Idea</label>
+            <textarea id="thoughtContent" name="thoughtContent" placeholder="Write your idea..." required></textarea>
+          </div>
+          <button type="submit" class="submit-btn">Post!</button>
+        </form>
+
+        <div id="post-success" class="success-message" style="display: none;">
+          ✅ Thought posted successfully!
         </div>
       </div>
 
@@ -81,84 +93,106 @@
       </div>
     </div>
   </main>
-
+  
   <footer>
     <div class="footer-content">
       <p>&copy; Faiz Danial bin Mohd Lotfi -- 1 Alfa</p>
     </div>
   </footer>
-
+  
+  <!-- Authentication Script -->
+  <script src="../assets/js/auth.js"></script>
+  
   <!-- Supabase ESM Script -->
   <script type="module">
     import { createClient } from "https://cdn.skypack.dev/@supabase/supabase-js";
-
     const SUPABASE_URL = "https://hjpjtufobzttssidfexf.supabase.co";
-    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhqcGp0dWZvYnp0dHNzaWRmZXhmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM4MTY0OTQsImV4cCI6MjA3OTM5MjQ5NH0.xAAAGortVAhOIeKoMyWNvJDrc0kr0FjfTzn3V99wFS0"; // replace with your anon key
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhqcGp0dWZvYnp0dHNzaWRmZXhmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM4MTY0OTQsImV4cCI6MjA3OTM5MjQ5NH0.xAAAGortVAhOIeKoMyWNvJDrc0kr0FjfTzn3V99wFS0";
     const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
+    
     // Run code only after DOM is fully loaded
     document.addEventListener("DOMContentLoaded", () => {
+      // Check authentication status
+      checkAccess();
+      
       const form = document.getElementById("thoughtForm");
       const titleEl = document.getElementById("thoughtText");
       const categoryEl = document.getElementById("thoughtCategory");
       const contentEl = document.getElementById("thoughtContent");
-      const thoughtsDiv = document.getElementById("thoughts");
-
+      
       // Submit a new thought
       form.addEventListener("submit", async (e) => {
         e.preventDefault();
+        
+        // Double check authentication
+        if (!window.Auth.isAdmin()) {
+          alert("Only admins can post content!");
+          return;
+        }
+        
         const text = titleEl.value.trim();
         const category = categoryEl.value.trim() || null;
         const content = contentEl.value.trim();
-
-        if (!text || !content) return alert("Please fill in all fields!");
-
+        
+        if (!text || !content) {
+          return alert("Please fill in all fields!");
+        }
+        
         const { data, error } = await supabase
           .from("thoughts")
-          .insert([{ text, category, content }]);
-
+          .insert([{ 
+            text, 
+            category, 
+            content,
+            author: window.Auth.getCurrentUser().email,
+            created_at: new Date().toISOString()
+          }]);
+        
         if (error) {
           console.error(error);
           alert("Failed to submit. Check console.");
         } else {
+          // Clear form
           titleEl.value = "";
-          categoryEl.value = "";
+          categoryEl.value = "deep-dive";
           contentEl.value = "";
-          loadThoughts();
+          
+          // Show success message
+          document.getElementById('post-success').style.display = 'block';
+          setTimeout(() => {
+            document.getElementById('post-success').style.display = 'none';
+          }, 3000);
         }
       });
-
-      // Load all thoughts
-      async function loadThoughts() {
-        const { data, error } = await supabase
-          .from("thoughts")
-          .select("*")
-          .order("created_at", { ascending: false });
-
-        if (error) {
-          console.error(error);
-          thoughtsDiv.innerHTML = "<p style='color:red'>Failed to load thoughts.</p>";
-          return;
-        }
-
-        if (!data || data.length === 0) {
-          thoughtsDiv.innerHTML = '<div style="text-align: center; color: white; padding: 20px;">No thoughts yet. Be the first!</div>';
-          return;
-        }
-
-        thoughtsDiv.innerHTML = data.map(t => `
-          <div class="comment-item" style="padding:8px; border-bottom:1px solid #eee;">
-            <strong>${t.category || "Uncategorized"}</strong>: ${t.text}<br>
-            <small>${t.content}</small><br>
-            <div class="comment-date">${new Date(t.created_at).toLocaleString()}</div>
-          </div>
-        `).join('');
-      }
-
-      // Initial load
-      loadThoughts();
+      
+      // Re-check access periodically
+      setInterval(checkAccess, 1000);
     });
+    
+    function checkAccess() {
+      const warning = document.getElementById('protected-warning');
+      const formContainer = document.getElementById('post-form-container');
+      
+      if (window.Auth && window.Auth.isAdmin()) {
+        warning.style.display = 'none';
+        formContainer.style.display = 'block';
+      } else {
+        warning.style.display = 'block';
+        formContainer.style.display = 'none';
+      }
+    }
   </script>
 
+  <style>
+    .success-message {
+      background: #d4edda;
+      color: #155724;
+      padding: 15px;
+      border-radius: 5px;
+      margin-top: 20px;
+      text-align: center;
+      font-weight: bold;
+    }
+  </style>
 </body>
 </html>

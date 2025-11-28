@@ -3,47 +3,39 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Tsukuru | Idea Board</title>
+  <title>Tsukuru | Deep Dives</title>
   <link rel="stylesheet" href="../assets/css/style.css">
   <link rel="icon" type="image/png" href="../assets/images/logo.jpg">
 </head>
 <body>
-  <!-- Navigation Menu -->
+
   <nav>
     <div class="nav-container">
       <a href="../index.html" class="nav-logo">
         <img src="../assets/images/logo.jpg" alt="Logo">
       </a>
       <div class="nav-links">
-        <a href="../pages/board.html" class="nav-link">💬 Board</a>
-        <a href="../pages/aboutme.html" class="nav-link">👀 About Me</a>
-        <a href="../pages/post.html" class="nav-link active">💬 Post!</a>
+        <a href="../pages/board.html" class="nav-link">💬 Short Thoughts</a>
+        <a href="../pages/deepdive.html" class="nav-link active">📘 Deep Dives</a>
+        <a href="../pages/post.html" class="nav-link">💭 Post!</a>
       </div>
     </div>
   </nav>
 
-  <!-- Header -->
   <header>
     <div class="header-content">
-      <h1>💬 Deep Dives 💬</h1>
-      <p>Longer Opinions (not contraversial)</p>
+      <h1>📘 Deep Dives 📘</h1>
+      <p>Your longer, thoughtful reflections</p>
     </div>
   </header>
 
+  <main>
+    <div id="thoughts-list" class="comments-list">
+      <div class="loading"><p>🔄 Loading deep dives...</p></div>
+    </div>
 
-        <div id="thoughts" class="comments-list">
-          <div class="loading" style="text-align: center; color: white; padding: 20px;">
-            Loading thoughts...
-          </div>
-        </div>
-      </div>
-
-      <!-- Back to Home -->
-      <div class="back-home">
-        <a href="../index.html" class="back-btn">
-          ← Back to Home Page
-        </a>
-      </div>
+    <div class="back-home">
+      <a href="../index.html" class="back-btn"><span>←</span> Back to Home Page</a>
     </div>
   </main>
 
@@ -53,43 +45,57 @@
     </div>
   </footer>
 
-<div id="thoughts-list"></div>
+  <script type="module">
+    import { createClient } from "https://cdn.skypack.dev/@supabase/supabase-js";
 
-<script type="module">
-import { createClient } from "https://cdn.skypack.dev/@supabase/supabase-js";
+    const SUPABASE_URL = "https://hjpjtufobzttssidfexf.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhqcGp0dWZvYnp0dHNzaWRmZXhmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM4MTY0OTQsImV4cCI6MjA3OTM5MjQ5NH0.xAAAGortVAhOIeKoMyWNvJDrc0kr0FjfTzn3V99wFS0";
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-const SUPABASE_URL = "https://hjpjtufobzttssidfexf.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhqcGp0dWZvYnp0dHNzaWRmZXhmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM4MTY0OTQsImV4cCI6MjA3OTM5MjQ5NH0.xAAAGortVAhOIeKoMyWNvJDrc0kr0FjfTzn3V99wFS0";
-const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
 
-async function loadThoughts() {
-  const { data, error } = await supabase
-    .from("thoughts")
-    .select("*")
-    .eq("category", "short-thoughts")
-    .order("created_at", { ascending: false });
+    function formatDate(dateString) {
+      const date = new Date(dateString);
+      return date.toLocaleString();
+    }
 
-  const div = document.getElementById("thoughts-list");
+    async function loadThoughts() {
+      const div = document.getElementById("thoughts-list");
+      div.innerHTML = '<div class="loading"><p>🔄 Loading deep dives...</p></div>';
 
-  if (error) {
-    div.innerHTML = "<p>Error loading thoughts</p>";
-    return;
-  }
+      const { data, error } = await supabase
+        .from("thoughts")
+        .select("*")
+        .eq("category", "long-thoughts")
+        .order("created_at", { ascending: false });
 
-  if (!data || data.length === 0) {
-    div.innerHTML = "<p>No short thoughts yet!</p>";
-    return;
-  }
+      if (error) {
+        div.innerHTML = "<p>Error loading deep dives</p>";
+        return;
+      }
 
-  div.innerHTML = data.map(t => `
-    <div>
-      <strong>${t.category}</strong>: ${t.text}
-      <small>${new Date(t.created_at).toLocaleString()}</small>
-    </div>
-  `).join('');
-}
+      if (!data.length) {
+        div.innerHTML = "<p>No deep dives yet!</p>";
+        return;
+      }
 
-loadThoughts();
-</script>
+      div.innerHTML = data.map(thought => `
+        <div class="thought-item">
+          <h3>${escapeHtml(thought.text)}</h3>
+          <div class="thought-text">${escapeHtml(thought.content)}</div>
+          <div class="thought-meta">
+            <span>🕐 ${formatDate(thought.created_at)}</span>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    loadThoughts();
+  </script>
+
 </body>
 </html>
