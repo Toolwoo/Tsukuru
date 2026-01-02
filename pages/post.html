@@ -15,8 +15,9 @@
         <img src="../assets/images/logo.jpg" alt="Logo">
       </a>
       <div class="nav-links">
-        <a href="../pages/board.html" class="nav-link">💬 Board</a>
-        <a href="../pages/post.html" class="nav-link active">💬 Post!</a>
+        <a href="../pages/board.html" class="nav-link">💬 Short Thoughts</a>
+        <a href="../pages/deepdives.html" class="nav-link">📘 Deep Dives</a>
+        <a href="../pages/post.html" class="nav-link active">💭 Post!</a>
       </div>
       
       <!-- Authentication Section -->
@@ -144,7 +145,6 @@
             text, 
             category, 
             content,
-            author: window.Auth.getCurrentUser().email,
             created_at: new Date().toISOString()
           }]);
         

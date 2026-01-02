@@ -8,95 +8,107 @@
   <link rel="icon" type="image/png" href="../assets/images/logo.jpg">
 </head>
 <body>
-
   <nav>
     <div class="nav-container">
       <a href="../index.html" class="nav-logo">
         <img src="../assets/images/logo.jpg" alt="Logo">
       </a>
       <div class="nav-links">
-        <a href="../pages/short.html" class="nav-link active">💬 Short Thoughts</a>
+        <a href="../pages/board.html" class="nav-link active">💬 Short Thoughts</a>
         <a href="../pages/deepdives.html" class="nav-link">📘 Deep Dives</a>
         <a href="../pages/post.html" class="nav-link">💭 Post!</a>
       </div>
+      <!-- Add Auth Buttons Here -->
+      <div class="auth-buttons">
+        <button class="auth-btn" id="loginBtn">Login</button>
+        <button class="auth-btn" id="signupBtn">Sign Up</button>
+      </div>
+      <!-- User Info (shown when logged in) -->
+      <div class="user-info" style="display: none;">
+        <span class="user-email" id="userEmail"></span>
+        <button class="logout-btn" id="logoutBtn">Logout</button>
+      </div>
     </div>
   </nav>
-
+  
   <header>
     <div class="header-content">
       <h1>💬 Short Thoughts 💬</h1>
       <p>Bite-sized brain sparks ✨</p>
     </div>
   </header>
-
+  
   <main>
     <div id="thoughts-list" class="comments-list">
       <div class="loading"><p>🔄 Loading thoughts...</p></div>
     </div>
-
     <div class="back-home">
       <a href="../index.html" class="back-btn"><span>←</span> Back to Home Page</a>
     </div>
   </main>
-
+  
   <footer>
     <div class="footer-content">
       <p>&copy; Faiz Danial bin Mohd Lotfi -- 1 Alfa</p>
     </div>
   </footer>
-
+  
+  <!-- Auth Script (must come before the page script) -->
+  <script src="../assets/js/auth.js"></script>
+  
   <script type="module">
     import { createClient } from "https://cdn.skypack.dev/@supabase/supabase-js";
-
+    
     const SUPABASE_URL = "https://hjpjtufobzttssidfexf.supabase.co";
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhqcGp0dWZvYnp0dHNzaWRmZXhmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM4MTY0OTQsImV4cCI6MjA3OTM5MjQ5NH0.xAAAGortVAhOIeKoMyWNvJDrc0kr0FjfTzn3V99wFS0";
+    
     const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
+    
     function escapeHtml(text) {
       const div = document.createElement('div');
       div.textContent = text;
       return div.innerHTML;
     }
-
+    
     function formatDate(dateString) {
       const date = new Date(dateString);
       return date.toLocaleString();
     }
-
+    
     async function loadThoughts() {
       const div = document.getElementById("thoughts-list");
       div.innerHTML = '<div class="loading"><p>🔄 Loading thoughts...</p></div>';
-
+      
       const { data, error } = await supabase
         .from("thoughts")
         .select("*")
         .eq("category", "short-thoughts")
         .order("created_at", { ascending: false });
-
+      
       if (error) {
-        div.innerHTML = "<p>Error loading thoughts</p>";
+        div.innerHTML = '<div class="error-message">Error loading thoughts: ' + escapeHtml(error.message) + '</div>';
         return;
       }
-
-      if (!data.length) {
-        div.innerHTML = "<p>No short thoughts yet!</p>";
+      
+      if (!data || !data.length) {
+        div.innerHTML = '<div class="no-thoughts"><p>No short thoughts yet! Be the first to share one! 💭</p></div>';
         return;
       }
-
+      
       div.innerHTML = data.map(thought => `
         <div class="thought-item">
           <label for="thought-item">Presented by Toolwoo</label>
           <div class="thought-title">${escapeHtml(thought.text)}</div>
           <div class="thought-text">${escapeHtml(thought.content)}</div>
           <div class="thought-meta">
-            <span>🕐 ${formatDate(thought.created_at)}</span>
+            <span class="thought-date">🕐 ${formatDate(thought.created_at)}</span>
           </div>
         </div>
       `).join('');
     }
-
+    
+    // Load thoughts on page load
     loadThoughts();
   </script>
-
 </body>
 </html>

@@ -1,10 +1,9 @@
-// auth.js - Supabase Authentication System
-// This version stores users in Supabase database instead of localStorage
+// auth.js - Fixed Supabase Authentication System
 
-// Import Supabase (make sure this runs after Supabase is loaded)
 let supabase;
+let supabaseReady = false;
 
-// Simple password hashing (for basic security)
+// Simple password hashing (same algorithm for consistency)
 function hashPassword(password) {
     let hash = 0;
     for (let i = 0; i < password.length; i++) {
@@ -15,21 +14,56 @@ function hashPassword(password) {
     return hash.toString();
 }
 
-// Initialize Supabase client
-function initSupabase() {
+// Initialize Supabase client and wait for it to be ready
+async function initSupabase() {
+    if (supabaseReady) return supabase;
+    
     const SUPABASE_URL = "https://hjpjtufobzttssidfexf.supabase.co";
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhqcGp0dWZvYnp0dHNzaWRmZXhmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM4MTY0OTQsImV4cCI6MjA3OTM5MjQ5NH0.xAAAGortVAhOIeKoMyWNvJDrc0kr0FjfTzn3V99wFS0";
     
-    // Use the global supabase if available, otherwise create a new client
-    if (window.supabaseClient) {
-        supabase = window.supabaseClient;
-    } else {
-        // Dynamically import Supabase
-        import('https://cdn.skypack.dev/@supabase/supabase-js')
-            .then(module => {
-                supabase = module.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-                window.supabaseClient = supabase;
+    try {
+        // Load Supabase from CDN if not already loaded
+        if (typeof window.supabase === 'undefined' || !window.supabase.createClient) {
+            console.log('📦 Loading Supabase from CDN...');
+            
+            await new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                script.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.3/dist/umd/supabase.js';
+                script.async = false;
+                
+                script.onload = () => {
+                    console.log('✅ Supabase script loaded');
+                    // Wait a bit for the global to be available
+                    setTimeout(() => {
+                        if (typeof window.supabase !== 'undefined' && window.supabase.createClient) {
+                            console.log('✅ Supabase global available');
+                            resolve();
+                        } else {
+                            reject(new Error('Supabase global not available after script load'));
+                        }
+                    }, 200);
+                };
+                
+                script.onerror = () => {
+                    reject(new Error('Failed to load Supabase script'));
+                };
+                
+                document.head.appendChild(script);
             });
+        }
+        
+        // Create client
+        if (!window.supabase || !window.supabase.createClient) {
+            throw new Error('Supabase library not loaded properly');
+        }
+        
+        supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        supabaseReady = true;
+        console.log('✅ Supabase initialized successfully');
+        return supabase;
+    } catch (error) {
+        console.error('❌ Failed to initialize Supabase:', error);
+        throw error;
     }
 }
 
@@ -49,95 +83,166 @@ const Auth = {
 
     // Signup function with Supabase
     async signup(email, password, confirmPassword) {
-        // Validation
-        if (!email || !password || !confirmPassword) {
-            return { success: false, message: 'Please fill all fields' };
+        try {
+            // Ensure Supabase is initialized
+            await initSupabase();
+            
+            // Validation
+            if (!email || !password || !confirmPassword) {
+                return { success: false, message: 'Please fill all fields' };
+            }
+
+            if (password !== confirmPassword) {
+                return { success: false, message: 'Passwords do not match!' };
+            }
+
+            if (password.length < 6) {
+                return { success: false, message: 'Password must be at least 6 characters!' };
+            }
+
+            // Check if email is valid
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                return { success: false, message: 'Invalid email!' };
+            }
+
+            // Check if user already exists
+            const { data: existing, error: checkError } = await supabase
+                .from('users')
+                .select('email')
+                .eq('email', email)
+                .maybeSingle();
+
+            if (checkError && checkError.code !== 'PGRST116') {
+                console.error('Check error:', checkError);
+                return { success: false, message: 'Error checking existing user' };
+            }
+
+            if (existing) {
+                return { success: false, message: 'Email is already registered!' };
+            }
+
+            // Hash password
+            const hashedPassword = hashPassword(password);
+
+            // Insert new user
+            const { data, error } = await supabase
+                .from('users')
+                .insert([
+                    { 
+                        email: email, 
+                        password: hashedPassword,
+                        is_admin: false,
+                        created_at: new Date().toISOString()
+                    }
+                ])
+                .select();
+
+            if (error) {
+                console.error('Signup error:', error);
+                return { success: false, message: `Signup failed: ${error.message}` };
+            }
+
+            console.log('✅ User created successfully:', data);
+            return { success: true, message: 'Signup successful! Please log in.' };
+        } catch (error) {
+            console.error('Signup exception:', error);
+            return { success: false, message: 'Signup failed. Please check console for errors.' };
         }
-
-        if (password !== confirmPassword) {
-            return { success: false, message: 'Passwords do not match!' };
-        }
-
-        if (password.length < 6) {
-            return { success: false, message: 'Password must be at least 6 characters!' };
-        }
-
-        // Check if email is valid
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(email)) {
-            return { success: false, message: 'Invalid email!' };
-        }
-
-        // Check if user already exists
-        const { data: existing, error: checkError } = await supabase
-            .from('users')
-            .select('email')
-            .eq('email', email)
-            .single();
-
-        if (existing) {
-            return { success: false, message: 'Email is already registered!' };
-        }
-
-        // Hash password
-        const hashedPassword = hashPassword(password);
-
-        // Insert new user
-        const { data, error } = await supabase
-            .from('users')
-            .insert([
-                { 
-                    email: email, 
-                    password: hashedPassword,
-                    is_admin: false
-                }
-            ]);
-
-        if (error) {
-            console.error('Signup error:', error);
-            return { success: false, message: 'Signup failed. Please try again.' };
-        }
-
-        return { success: true, message: 'Signup successful! Please log in.' };
     },
 
     // Login function with Supabase
     async login(email, password) {
-        const hashedPassword = hashPassword(password);
+        try {
+            // Ensure Supabase is initialized
+            await initSupabase();
+            
+            const hashedPassword = hashPassword(password);
 
-        // Check user credentials
-        const { data, error } = await supabase
-            .from('users')
-            .select('*')
-            .eq('email', email)
-            .eq('password', hashedPassword)
-            .single();
+            console.log('🔍 Attempting login for:', email);
+            console.log('🔑 Hashed password:', hashedPassword);
 
-        if (error || !data) {
-            return { success: false, message: 'Incorrect email or password!' };
+            // Check user credentials
+            const { data, error } = await supabase
+                .from('users')
+                .select('*')
+                .eq('email', email)
+                .eq('password', hashedPassword)
+                .maybeSingle();
+
+            if (error) {
+                console.error('Login error:', error);
+                return { success: false, message: 'Login failed. Please try again.' };
+            }
+
+            if (!data) {
+                console.log('❌ No user found with these credentials');
+                
+                // Debug: Check if user exists with this email
+                const { data: emailCheck } = await supabase
+                    .from('users')
+                    .select('email, is_admin')
+                    .eq('email', email)
+                    .maybeSingle();
+                
+                if (emailCheck) {
+                    console.log('📧 User exists but password incorrect');
+                } else {
+                    console.log('📧 No user with this email');
+                }
+                
+                return { success: false, message: 'Incorrect email or password!' };
+            }
+
+            console.log('✅ User found:', {
+                id: data.id,
+                email: data.email,
+                is_admin: data.is_admin,
+                is_admin_type: typeof data.is_admin
+            });
+
+            // Store user in localStorage with proper admin status
+            const user = {
+                id: data.id,
+                email: data.email,
+                isAdmin: data.is_admin === true || data.is_admin === 1 || data.is_admin === '1',
+                loginTime: new Date().toISOString()
+            };
+            
+            localStorage.setItem('currentUser', JSON.stringify(user));
+            
+            console.log('✅ Login successful! User stored:', user);
+            console.log('👑 Admin status:', user.isAdmin);
+            
+            return { success: true, message: 'Login successful!' };
+        } catch (error) {
+            console.error('Login exception:', error);
+            return { success: false, message: 'Login failed. Please check console for errors.' };
         }
-
-        // Store user in localStorage
-        const user = {
-            id: data.id,
-            email: data.email,
-            isAdmin: data.is_admin,
-            loginTime: new Date().toISOString()
-        };
-        localStorage.setItem('currentUser', JSON.stringify(user));
-        
-        return { success: true, message: 'Login successful!' };
     },
 
     // Logout function
     logout() {
         localStorage.removeItem('currentUser');
+        console.log('👋 User logged out');
     },
 
     // Check if user is admin
     isAdmin() {
         const user = this.getCurrentUser();
-        return user && user.isAdmin === true;
+        if (!user) {
+            console.log('👤 No user logged in');
+            return false;
+        }
+        
+        const adminStatus = user.isAdmin === true || user.isAdmin === 1 || user.isAdmin === '1';
+        console.log('👤 Admin check:', { 
+            user, 
+            isAdmin: user.isAdmin,
+            isAdminType: typeof user.isAdmin,
+            adminStatus 
+        });
+        return adminStatus;
     }
 };
 
@@ -149,18 +254,24 @@ function updateAuthUI() {
 
     if (Auth.isLoggedIn()) {
         const user = Auth.getCurrentUser();
-        authSection.style.display = 'none';
-        userSection.style.display = 'flex';
+        console.log('🔄 Updating UI for user:', user);
+        
+        if (authSection) authSection.style.display = 'none';
+        if (userSection) userSection.style.display = 'flex';
         
         // Show admin badge if user is admin
-        if (user.isAdmin) {
-            userEmail.textContent = user.email + ' 👑';
+        const isAdmin = Auth.isAdmin();
+        if (isAdmin) {
+            if (userEmail) userEmail.textContent = user.email + ' 👑';
+            console.log('👑 Admin UI displayed');
         } else {
-            userEmail.textContent = user.email;
+            if (userEmail) userEmail.textContent = user.email;
+            console.log('👤 Regular user UI displayed');
         }
     } else {
-        authSection.style.display = 'flex';
-        userSection.style.display = 'none';
+        console.log('🔄 No user logged in, showing auth buttons');
+        if (authSection) authSection.style.display = 'flex';
+        if (userSection) userSection.style.display = 'none';
     }
 }
 
@@ -218,6 +329,8 @@ function showLoginModal() {
             modal.remove();
             updateAuthUI();
             alert(result.message);
+            // Reload page to apply admin features
+            window.location.reload();
         } else {
             errorEl.textContent = result.message;
         }
@@ -247,7 +360,7 @@ function showSignupModal() {
     `;
     document.body.appendChild(modal);
 
- modal.querySelector('.close-modal').onclick = () => modal.remove();
+    modal.querySelector('.close-modal').onclick = () => modal.remove();
     modal.onclick = (e) => {
         if (e.target === modal) modal.remove();
     };
@@ -286,39 +399,48 @@ function showSignupModal() {
 }
 
 // Initialize auth on page load
-document.addEventListener('DOMContentLoaded', () => {
-    initSupabase();
-    updateAuthUI();
+document.addEventListener('DOMContentLoaded', async () => {
+    console.log('🚀 Initializing authentication...');
+    
+    try {
+        await initSupabase();
+        updateAuthUI();
+        
+        // Login button
+        const loginBtn = document.getElementById('login-btn');
+        if (loginBtn) {
+            loginBtn.onclick = showLoginModal;
+        }
 
-    // Login button
-    const loginBtn = document.getElementById('login-btn');
-    if (loginBtn) {
-        loginBtn.onclick = showLoginModal;
-    }
+        // Signup button
+        const signupBtn = document.getElementById('signup-btn');
+        if (signupBtn) {
+            signupBtn.onclick = showSignupModal;
+        }
 
-    // Signup button
-    const signupBtn = document.getElementById('signup-btn');
-    if (signupBtn) {
-        signupBtn.onclick = showSignupModal;
-    }
-
-    // Logout button
-    const logoutBtn = document.getElementById('logout-btn');
-    if (logoutBtn) {
-        logoutBtn.onclick = () => {
-            if (confirm('Adakah anda pasti mahu log keluar?')) {
-                Auth.logout();
-                updateAuthUI();
-                alert('Anda telah log keluar.');
-                
-                // Redirect to home if on post page
-                if (window.location.pathname.includes('post.html')) {
-                    window.location.href = '../index.html';
+        // Logout button
+        const logoutBtn = document.getElementById('logout-btn');
+        if (logoutBtn) {
+            logoutBtn.onclick = () => {
+                if (confirm('Are you sure you want to logout?')) {
+                    Auth.logout();
+                    updateAuthUI();
+                    alert('You have been logged out.');
+                    
+                    // Redirect to home if on post page
+                    if (window.location.pathname.includes('post.html')) {
+                        window.location.href = '../index.html';
+                    } else {
+                        window.location.reload();
+                    }
                 }
-            }
-        };
+            };
+        }
+    } catch (error) {
+        console.error('❌ Failed to initialize auth:', error);
     }
 });
 
 // Export for use in other pages
 window.Auth = Auth;
+window.updateAuthUI = updateAuthUI;
